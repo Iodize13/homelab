@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mautrix-meta
+  namespace: synapse
+spec:
+  selector:
+    matchLabels:
+      app: mautrix-meta
+  serviceName: mautrix-meta-service
+  # Only one replica - multiple bridge instances will corrupt state
+  replicas: 1
+  # Docs recommend Recreate, StatefulSet handles ordering itself
+  podManagementPolicy: OrderedReady
+  template:
+    metadata:
+      labels:
+        app: mautrix-meta
+    spec:
+      # The bridge image runs as UID 1337. fsGroup ensures volume permissions.
+      securityContext:
+        fsGroup: 1337
+        runAsUser: 1337
+        runAsGroup: 1337
+      containers:
+      - name: mautrix-meta
+        image: dock.mau.dev/mautrix/meta:latest
+        # Bypass startup script: run the bridge directly with --no-update
+        # This avoids permission mangling and auto-generation that don't work well in k8s.
+        # The config must NOT contain "generate" values when using --no-update.
+        command: ["/usr/bin/mautrix-meta"]
+        args:
+        - "--no-update"
+        - "-c"
+        - "/data/config.yaml"
+        ports:
+        - containerPort: 29319
+          name: appservice
+          protocol: TCP
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /data/config.yaml
+          subPath: config.yaml
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /_matrix/mau/live
+            port: 29319
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /_matrix/mau/ready
+            port: 29319
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: config
+        configMap:
+          name: mautrix-meta-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: mautrix-meta-pv-claim

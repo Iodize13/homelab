@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mautrix-meta-generate
+  namespace: synapse
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: copy-config
+        image: busybox:1.37
+        command: ["sh", "-c", "cp /config-readonly/config.yaml /data/config-writable.yaml"]
+        volumeMounts:
+        - name: config-cm
+          mountPath: /config-readonly
+        - name: data
+          mountPath: /data
+      containers:
+      - name: generate
+        image: dock.mau.dev/mautrix/meta:latest
+        command: ["/usr/bin/mautrix-meta"]
+        args: ["-g", "-c", "/data/config-writable.yaml", "-r", "/data/registration.yaml"]
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: config-cm
+        configMap:
+          name: mautrix-meta-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: mautrix-meta-pv-claim

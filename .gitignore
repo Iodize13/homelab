@@ -1,0 +1,7 @@
+/.agent-shell/
+history.txt
+history-2.txt
+\#history-2.txt#
+*.dec.yaml
+keys.txt
+age.key

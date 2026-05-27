@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: synapse-pv
+  namespace: synapse
+  labels:
+    pvc_type: synapse-pv
+spec:
+  storageClassName: manual
+  capacity:
+    # storage: 50Gi
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /etc/matrix/synapse/data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: synapse-pv-claim
+  namespace: synapse
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+#  volumeMode: Filesystem
+  resources:
+    requests:
+      # storage: 50Gi
+      storage: 5Gi

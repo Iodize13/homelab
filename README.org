@@ -1,0 +1,33 @@
+1. Create the database:
+      kubectl exec -it synapse-cluster-1 -n synapse -- psql -U postgres
+   CREATE USER meta_user WITH PASSWORD 'your-password';
+   CREATE DATABASE meta_db OWNER meta_user;
+   
+
+2. Generate tokens and edit apps/matrix/mautrix-meta/configMap.yaml:
+      openssl rand -hex 32   # use this for appservice.as_token and appservice.hs_token
+   
+   Also set network.mode (facebook, messenger, or instagram) and the database password.
+
+3. Deploy:
+      kubectl apply -f apps/matrix/mautrix-meta/pv.yaml
+   kubectl apply -f apps/matrix/mautrix-meta/configMap.yaml
+   kubectl apply -f apps/matrix/mautrix-meta/service.yaml
+   kubectl apply -f apps/matrix/mautrix-meta/statefulset.yaml
+   
+
+4. Generate registration for Synapse: (bridge must be running first)
+      kubectl exec -it mautrix-meta-0 -n synapse -- \
+     /usr/bin/mautrix-meta -g -c /data/config.yaml -r /data/registration.yaml
+   
+
+5. Copy registration to Synapse's data dir and add to homeserver.yaml:
+      app_service_config_files:
+   - /data/mautrix-meta-registration.yaml
+   
+   Then restart Synapse.
+
+6. Log in via the bridge bot: !meta login in a DM with @metabot:matrix.ionize13.com.
+* Sources
+My sources for this repository are:
+- https://github.com/jalalsadeghi/matrix-synapse-kubernetes

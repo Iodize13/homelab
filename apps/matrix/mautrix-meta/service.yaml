@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mautrix-meta
+  name: mautrix-meta-service
+  namespace: synapse
+spec:
+  # Headless service recommended for StatefulSet with publishNotReadyAddresses
+  clusterIP: None
+  ports:
+  - name: appservice
+    port: 29319
+    protocol: TCP
+    targetPort: 29319
+  selector:
+    app: mautrix-meta
+  type: ClusterIP
+  publishNotReadyAddresses: true
