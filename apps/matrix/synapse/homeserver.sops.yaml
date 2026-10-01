@@ -1,0 +1,61 @@
+# Configuration file for Synapse.
+#
+# This is a YAML file: see [1] for a quick introduction. Note in particular
+# that *indentation is important*: all the elements of a list or dictionary
+# should have the same indentation.
+#
+# [1] https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+#
+# For more information on how to configure Synapse, including a complete accounting of
+# each option, go to docs/usage/configuration/config_documentation.md or
+# https://element-hq.github.io/synapse/latest/usage/configuration/config_documentation.html
+server_name: matrix.ionize13.com
+pid_file: /data/homeserver.pid
+listeners:
+    - port: 8008
+      resources:
+        - compress: false
+          names:
+            - client
+            - federation
+      tls: false
+      type: http
+      x_forwarded: true
+database:
+    name: psycopg2
+    args:
+        user: app
+        password: ENC[AES256_GCM,data:2zpB9a/yGDoa33lSmXQnyZmrYkNANAF4w6sIQFmpyFjw4con1Fjf+lJKNgOp0lUrYGcK1bCx2PLOvwOO2ljBjA==,iv:Tq5ATQBhmrIWvWidICWYU7eKncmgNZLNqSPm8fTlALs=,tag:Os3fUbxoKBQuQFdubpMIJA==,type:str]
+        database: app
+        host: synapse-cluster-rw
+        cp_min: 5
+        cp_max: 10
+log_config: /data/matrix.ionize13.com.log.config
+media_store_path: /data/media_store
+registration_shared_secret: ENC[AES256_GCM,data:E3t+ccIEnSQCirGX4CL6OvTwhtkWHbNC6dTF422tPRUs6RW5FJWbni4WSQfv87slqI0=,iv:6csaa32LPlSpV/imdK1dp1nTGzVDVB/Amm/08WrXr6Q=,tag:6qTDxVql97GEzGRVm4lotw==,type:str]
+enable_registration: true
+enable_registration_without_verification: true
+report_stats: true
+macaroon_secret_key: ENC[AES256_GCM,data:SZOjyF63odBpHXcfad2CuShKsSuUb3upBsvF2IjLlJ+yZ6UhSU183ILWioh8A1qISu4=,iv:bDWQ26BBSIV0Gmu3yIr8Hu7XTfpVAUZmk12aW2yIjdc=,tag:1EpjXJZMezPPJj1EVoXCew==,type:str]
+form_secret: ENC[AES256_GCM,data:OkLoy0hx2IOiI6XxnjQ46gFOQo3nKZXRzd4ZQlKxbf0PvBGoey2lYRoIGSX7LWOoI0U=,iv:sHVI4IdBJIjYp0Tz7THZIBORaoetvrJOCgfzMNluKhs=,tag:u375IkZBgIJL2LR8eWCYpg==,type:str]
+signing_key_path: /data/matrix.ionize13.com.signing.key
+trusted_key_servers:
+    - server_name: matrix.org
+app_service_config_files:
+    - /data/mautrix-meta-registration.yaml
+# vim:ft=yaml
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBlcGlnWldXbEVjWnlxL0Q1
+            bTREZVpaNzlMblc4Wm9sUSt5cmZQcFlmNkE4CndkMVV4cFRhcSsvb1FOTzAvNWkv
+            ZHBFSExCenlyZDFrd20xK1JaUGkxTlUKLS0tIFdqV3BwbG5HZUxvMG1CbW5idXZq
+            aU84MXl4T1Zlb0tRdTRsOUNQNHkxWTQKrGrFl51vK6xpYd3OjdkoD7niPj2FGHmr
+            1eTn+rWkVPZeMRe11JPuteQUSkDr6qujKKVYGJeqtFKbVE87eS3pYg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1svlvvh3e8778dfl20nvkyd2v0zpjz4edg2a9x2yc0eve8j3n0y7q0csvr4
+    encrypted_regex: ^(password|registration_shared_secret|macaroon_secret_key|form_secret)$
+    lastmodified: "2026-10-01T15:30:28Z"
+    mac: ENC[AES256_GCM,data:d4KDk5ee6Zg57Ctwnf+gDtC4BVg5Mip86UvFNGzi4FOsbTSzsC0RPjXVSBNxkThb4C2shikNReIcy3fu3kao9KSx4YJ4gUvbwBk/2wTj0p2vvQd4bKTKW0ugPkueWBIq6/AYtok6uCzmsE2pIkqCwK5zlrtkQKtFftxGXoDgeVU=,iv:pTq0OYYTVZ0DNZyF3/vQkk9wD0e9wtL8ymTRn66AhUQ=,tag:x2sHkPUGQ6ohuLMlt+HWWg==,type:str]
+    version: 3.13.3

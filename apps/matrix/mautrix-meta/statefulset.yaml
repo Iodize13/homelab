@@ -65,8 +65,8 @@ spec:
             cpu: "500m"
       volumes:
       - name: config
-        configMap:
-          name: mautrix-meta-config
+        secret:
+          secretName: mautrix-meta-config
       - name: data
         persistentVolumeClaim:
           claimName: mautrix-meta-pv-claim

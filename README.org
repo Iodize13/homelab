@@ -1,17 +1,25 @@
+* Layout
+- apps/matrix/{synapse,cnpg,mautrix-meta,delegation}, namespace.yaml
+- Secrets are encrypted with SOPS + age (see .sops.yaml): synapse/homeserver.sops.yaml, mautrix-meta/secret.sops.yaml
+- Setup: install sops and age, then =export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt= (back up keys.txt outside this repo)
+- Edit: =sops <file>=. Apply: =sops -d <file> | kubectl apply -f -=
+- homeserver.sops.yaml lives on the Synapse PVC: =sops -d apps/matrix/synapse/homeserver.sops.yaml= then copy to /data/homeserver.yaml
+
 1. Create the database:
       kubectl exec -it synapse-cluster-1 -n synapse -- psql -U postgres
    CREATE USER meta_user WITH PASSWORD 'your-password';
    CREATE DATABASE meta_db OWNER meta_user;
    
 
-2. Generate tokens and edit apps/matrix/mautrix-meta/configMap.yaml:
+2. Generate tokens and edit the bridge secret with SOPS:
       openssl rand -hex 32   # use this for appservice.as_token and appservice.hs_token
    
+   Run: sops apps/matrix/mautrix-meta/secret.sops.yaml
    Also set network.mode (facebook, messenger, or instagram) and the database password.
 
 3. Deploy:
       kubectl apply -f apps/matrix/mautrix-meta/pv.yaml
-   kubectl apply -f apps/matrix/mautrix-meta/configMap.yaml
+   sops -d apps/matrix/mautrix-meta/secret.sops.yaml | kubectl apply -f -
    kubectl apply -f apps/matrix/mautrix-meta/service.yaml
    kubectl apply -f apps/matrix/mautrix-meta/statefulset.yaml
    
