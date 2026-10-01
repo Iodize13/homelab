@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: matrix
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Iodize13/matrix-synapse-kubernetes.git
+    targetRevision: main
+    path: apps/matrix
+    directory:
+      recurse: true
+      exclude: 'job-generate.yaml'   # one-shot Job, run by hand
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: synapse
+  # Manual sync until the mautrix-meta StatefulSet drift is reconciled.

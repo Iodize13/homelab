@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-guide
+  namespace: java-guide
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: java-guide
+  template:
+    metadata:
+      labels:
+        app: java-guide
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: nginx
+        image: ghcr.io/iodize13/java-beginner-guide:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
