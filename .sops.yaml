@@ -1,4 +1,6 @@
 creation_rules:
+  - path_regex: monitoring/synthetics/terraform\.tfstate$
+    age: age1svlvvh3e8778dfl20nvkyd2v0zpjz4edg2a9x2yc0eve8j3n0y7q0csvr4
   - path_regex: apps/matrix/synapse/homeserver\.sops\.yaml$
     encrypted_regex: ^(password|registration_shared_secret|macaroon_secret_key|form_secret)$
     age: age1svlvvh3e8778dfl20nvkyd2v0zpjz4edg2a9x2yc0eve8j3n0y7q0csvr4

@@ -38,7 +38,13 @@ cd monitoring/synthetics
 TF_VAR_sm_access_token="$(cat ~/grafana/sm-token)" terraform apply
 ```
 
-Terraform state holds the token in plain text, so `*.tfstate` is git-ignored.
+Terraform state holds the token in plain text, so `*.tfstate` is git-ignored. A SOPS/age
+encrypted copy is committed instead:
+
+```sh
+sops -d --input-type json --output-type json terraform.tfstate.sops.json > terraform.tfstate   # before apply
+sops -e --input-type json --output-type json terraform.tfstate > terraform.tfstate.sops.json   # after apply
+```
 
 ## Install
 
