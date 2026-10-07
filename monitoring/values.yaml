@@ -1,0 +1,30 @@
+# Grafana k8s-monitoring chart (v4.5.2), lightweight profile for a single-node k3s cluster.
+# Metrics only: no Beyla (eBPF), no SDK injector, no pod logs, to keep memory low.
+# Pipelines are managed remotely by Grafana Cloud Fleet Management.
+cluster:
+  name: hetzner
+collectorCommon:
+  alloy:
+    remoteConfig:
+      auth:
+        password: ""  # set at install time from $GRAFANA_CLOUD_TOKEN, never commit
+        username: '1859280'
+      enabled: true
+      url: https://fleet-management-prod-013.grafana.net
+collectors:
+  alloy:
+    presets:
+    - small
+    - daemonset
+    - service-discovery
+telemetryServices:
+  beyla:
+    deploy: false
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  opencost:
+    deploy: false
+  sdkInjector:
+    deploy: false
