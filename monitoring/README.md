@@ -29,6 +29,17 @@ resolves names internally and a dead cluster cannot report on itself. Public end
 checked by Grafana Cloud Synthetic Monitoring from probes on the internet, so a missing DNS
 record, an expired certificate or a 5xx all show up as down.
 
+The checks are defined as code in [`synthetics/main.tf`](synthetics/main.tf): one HTTP check per
+site (EN Workshop, Stash, Java guide, homepage) from Singapore and Frankfurt every 5 minutes,
+with an alert when executions fail.
+
+```sh
+cd monitoring/synthetics
+TF_VAR_sm_access_token="$(cat ~/grafana/sm-token)" terraform apply
+```
+
+Terraform state holds the token in plain text, so `*.tfstate` is git-ignored.
+
 ## Install
 
 ```sh
