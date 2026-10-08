@@ -50,3 +50,18 @@ Read-later app from https://github.com/Iodize13/stash. CI pushes =ghcr.io/iodize
 * Sources
 My sources for this repository are:
 - https://github.com/jalalsadeghi/matrix-synapse-kubernetes
+* Stash (apps/stash)
+Laravel app (ghcr.io/iodize13/stash, built by CI in Iodize13/stash) served at https://stash.ionize13.com through the Cloudflare tunnel ingress.
+- One image, three Deployments: stash-web (FrankenPHP; an initContainer runs =migrate --force=), stash-worker (=queue:work=), stash-scheduler (=schedule:work=, prunes expired demo sandboxes hourly).
+- Postgres: CNPG cluster stash-cluster; the app reads DB credentials from the generated stash-cluster-app secret.
+- APP_KEY lives in secret.sops.yaml.
+
+Deploy / update:
+   kubectl apply -f apps/stash/namespace.yaml -f apps/stash/cnpg-cluster.yaml
+   sops -d apps/stash/secret.sops.yaml | kubectl apply -f -
+   kubectl apply -f apps/stash/configmap.yaml -f apps/stash/deployment.yaml -f apps/stash/service.yaml -f apps/stash/ingress.yaml
+   # after CI pushes a new :latest image
+   kubectl rollout restart deploy/stash-web deploy/stash-worker deploy/stash-scheduler -n stash
+
+First accounts (no seeder in production):
+   kubectl exec -n stash deploy/stash-web -- php artisan stash:create-user you@example.com
