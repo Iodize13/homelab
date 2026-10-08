@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stash-env
+  namespace: stash
+data:
+  APP_NAME: Stash
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_URL: https://stash-next.ionize13.com
+  APP_LOCALE: en
+  LOG_CHANNEL: stderr
+  DB_CONNECTION: pgsql
+  QUEUE_CONNECTION: database
+  CACHE_STORE: database
+  SESSION_DRIVER: database
+  DEMO_LOGIN: "true"
+  SANDBOX_TEMPLATE_EMAIL: insee134@gmail.com
+  REPOSITORY_URL: https://github.com/Iodize13/stash

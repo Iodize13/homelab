@@ -36,6 +36,17 @@
    Then restart Synapse.
 
 6. Log in via the bridge bot: !meta login in a DM with @metabot:matrix.ionize13.com.
+* Stash (apps/stash)
+Read-later app from https://github.com/Iodize13/stash. CI pushes =ghcr.io/iodize13/stash:latest= after tests pass on main.
+- Postgres: CNPG cluster =stash-cluster= (app credentials in the generated =stash-cluster-app= secret)
+- One image, three Deployments: =stash-web= (runs =migrate --force= as an init container), =stash-worker= (queue), =stash-scheduler= (prunes demo sandboxes)
+- First deploy:
+      kubectl apply -f apps/stash/namespace.yaml -f apps/stash/cnpg-cluster.yaml
+   sops -d apps/stash/secret.sops.yaml | kubectl apply -f -
+   kubectl apply -f apps/stash/configmap.yaml -f apps/stash/deployment.yaml -f apps/stash/service.yaml -f apps/stash/ingress.yaml
+   kubectl exec -n stash deploy/stash-web -- php artisan stash:create-user you@example.com
+- Ship a new version (after CI is green): =kubectl rollout restart deploy -n stash=
+
 * Sources
 My sources for this repository are:
 - https://github.com/jalalsadeghi/matrix-synapse-kubernetes

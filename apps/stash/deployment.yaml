@@ -1,0 +1,175 @@
+# One image (ghcr.io/iodize13/stash), three processes: web, queue worker, scheduler.
+# Database credentials come from the secret CloudNativePG creates (stash-cluster-app).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stash-web
+  namespace: stash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stash-web
+  template:
+    metadata:
+      labels:
+        app: stash-web
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      initContainers:
+      - name: migrate
+        image: ghcr.io/iodize13/stash:latest
+        imagePullPolicy: Always
+        command: ["php", "artisan", "migrate", "--force"]
+        envFrom: &envFrom
+        - configMapRef:
+            name: stash-env
+        - secretRef:
+            name: stash-app
+        env: &dbEnv
+        - name: DB_HOST
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: host}}
+        - name: DB_PORT
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: port}}
+        - name: DB_DATABASE
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: dbname}}
+        - name: DB_USERNAME
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: username}}
+        - name: DB_PASSWORD
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: password}}
+        securityContext: &containerSecurity
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+      containers:
+      - name: web
+        image: ghcr.io/iodize13/stash:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        envFrom: *envFrom
+        env: *dbEnv
+        readinessProbe:
+          httpGet:
+            path: /up
+            port: 8080
+        livenessProbe:
+          httpGet:
+            path: /up
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 30
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "384Mi"
+            cpu: "500m"
+        securityContext: *containerSecurity
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stash-worker
+  namespace: stash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stash-worker
+  template:
+    metadata:
+      labels:
+        app: stash-worker
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+      - name: worker
+        image: ghcr.io/iodize13/stash:latest
+        imagePullPolicy: Always
+        # Restart the process now and then so a long-running worker cannot slowly grow.
+        command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=90", "--sleep=3", "--max-jobs=500", "--memory=128"]
+        envFrom:
+        - configMapRef:
+            name: stash-env
+        - secretRef:
+            name: stash-app
+        env:
+        - name: DB_HOST
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: host}}
+        - name: DB_PORT
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: port}}
+        - name: DB_DATABASE
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: dbname}}
+        - name: DB_USERNAME
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: username}}
+        - name: DB_PASSWORD
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: password}}
+        resources:
+          requests:
+            memory: "96Mi"
+            cpu: "20m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stash-scheduler
+  namespace: stash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stash-scheduler
+  template:
+    metadata:
+      labels:
+        app: stash-scheduler
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+      - name: scheduler
+        image: ghcr.io/iodize13/stash:latest
+        imagePullPolicy: Always
+        # Prunes expired demo sandboxes hourly and old activity log entries daily.
+        command: ["php", "artisan", "schedule:work"]
+        envFrom:
+        - configMapRef:
+            name: stash-env
+        - secretRef:
+            name: stash-app
+        env:
+        - name: DB_HOST
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: host}}
+        - name: DB_PORT
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: port}}
+        - name: DB_DATABASE
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: dbname}}
+        - name: DB_USERNAME
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: username}}
+        - name: DB_PASSWORD
+          valueFrom: {secretKeyRef: {name: stash-cluster-app, key: password}}
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "10m"
+          limits:
+            memory: "192Mi"
+            cpu: "250m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
