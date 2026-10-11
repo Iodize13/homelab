@@ -88,7 +88,7 @@ resource "grafana_synthetic_monitoring_check_alerts" "http" {
   check_id = each.value.id
   alerts = [{
     name      = "ProbeFailedExecutionsTooHigh"
-    threshold = 1
+    threshold = 2
     period    = "15m"
   }]
 }
